@@ -12,7 +12,7 @@ TimerFive                      KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
-Timer1                         KEYWORD2
+Timer5                         KEYWORD2
 initialize                     KEYWORD2
 start                          KEYWORD2
 stop                           KEYWORD2
