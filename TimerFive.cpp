@@ -24,8 +24,6 @@
 
 TimerFive Timer5;              // preinstatiate
 
-void (*TimerOne::isrCallback)() = NULL;
-
 ISR(TIMER5_OVF_vect){          // interrupt service routine that wraps a user defined function supplied by attachInterrupt
   Timer5.isrCallback();
 }
@@ -46,15 +44,15 @@ void TimerFive::setPeriod(long microseconds){
   else if((cycles >>= 3) < RESOLUTION) clockSelectBits = _BV(CS51) | _BV(CS50);  // prescale by /64
   else if((cycles >>= 2) < RESOLUTION) clockSelectBits = _BV(CS52);              // prescale by /256
   else if((cycles >>= 2) < RESOLUTION) clockSelectBits = _BV(CS52) | _BV(CS50);  // prescale by /1024
-  else        cycles = RESOLUTION - 1, clockSelectBits = _BV(CS52) | _BV(CS50);  // request was out of bounds, set as maximum
+  else	cycles = RESOLUTION - 1, clockSelectBits = _BV(CS52) | _BV(CS50);		 // request was out of bounds, set as maximum
   
   oldSREG = SREG;				
   cli();						// Disable interrupts for 16 bit register access
-  ICR5 = pwmPeriod = cycles;	// ICR5 is TOP in p & f correct pwm mode
+  ICR5 = pwmPeriod = cycles;	// ICR5 is TOP in pfc mode
   SREG = oldSREG;
   
-  TCCR5B &= ~(_BV(CS50) | _BV(CS51) | _BV(CS52));
-  TCCR5B |= clockSelectBits;		// reset clock select register, and starts the clock
+  TCCR5B &= ~(_BV(CS50) | _BV(CS51) | _BV(CS52)); //Reset clock select register
+  TCCR5B |= clockSelectBits;		//Starts the clock with new clock select register
 }
 
 void TimerFive::setPwmDuty(char pin, int duty){	//Set PWM Duty Cycle to specified pin
@@ -65,9 +63,21 @@ void TimerFive::setPwmDuty(char pin, int duty){	//Set PWM Duty Cycle to specifie
   
   oldSREG = SREG;
   cli();
-  if(pin == 46)		OCR5A = dutyCycle;
-  else if(pin == 45)OCR5B = dutyCycle;
-  else if(pin == 44)OCR5C = dutyCycle;
+  if(pin == 46){
+	OCR5A = dutyCycle;
+	DDRL |= _BV(PORTL3);
+	TCCR5A |= _BV(COM5A1);
+  }
+  else if(pin == 45){
+	OCR5B = dutyCycle;
+	DDRL |= _BV(PORTL4);
+	TCCR5A |= _BV(COM5B1);
+  }
+  else if(pin == 44){
+	OCR5C = dutyCycle;
+	DDRL |= _BV(PORTL5);
+	TCCR5A |= _BV(COM5C1);
+  }
   SREG = oldSREG;
 }
 
@@ -82,6 +92,8 @@ void TimerFive::setPwmDuty(int duty){ //Set the same PWM Duty Cycle to all pins
   OCR5A = dutyCycle;
   OCR5B = dutyCycle;
   OCR5C = dutyCycle;
+  DDRL |= _BV(PORTL3) | _BV(PORTL4) | _BV(PORTL5); //Make pins output
+  TCCR5A |= _BV(COM5A1) | _BV(COM5B1) | _BV(COM5C1); //Enable PWM outputs
   SREG = oldSREG;
 }
 
@@ -95,7 +107,7 @@ void TimerFive::pwm(char pin, int duty, long microseconds){	// expects duty cycl
     DDRL |= _BV(PORTL4);
     TCCR5A |= _BV(COM5B1);
   }
-  else if(pin == 45) {
+  else if(pin == 46) {
     DDRL |= _BV(PORTL5);
     TCCR5A |= _BV(COM5C1);
   }
@@ -114,7 +126,7 @@ void TimerFive::pwm(int duty, long microseconds){	// expects duty cycle to be 10
 }
 
 void TimerFive::disablePwm(char pin){
-  if(pin == 46)			TCCR5A &= ~_BV(COM5A1);   // clear the bit that enables pwm on PL3
+  if(pin == 44)			TCCR5A &= ~_BV(COM5A1);   // clear the bit that enables pwm on PL3
   else if(pin == 45)	TCCR5A &= ~_BV(COM5B1);   // clear the bit that enables pwm on PL4
   else if(pin == 46)	TCCR5A &= ~_BV(COM5C1);   // clear the bit that enables pwm on PL5
 }

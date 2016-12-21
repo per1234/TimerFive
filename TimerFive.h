@@ -49,7 +49,7 @@ class TimerFive
     void setPeriod(long microseconds);
     void setPwmDuty(char pin, int duty);
 	void setPwmDuty(int duty);	//Set the same PWM Duty Cycle to all pins
-    static void (*isrCallback)();
+    void (*isrCallback)();
 };
 
 extern TimerFive Timer5;
